@@ -1,0 +1,47 @@
+# Node modules (NUNCA se suben)
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencias lock temporales
+.pnpm-debug.log*
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Archivos de build
+dist/
+build/
+out/
+
+# Coverage de tests
+coverage/
+
+# Archivos temporales
+tmp/
+temp/
+
+# Configuración de editores
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# Archivos OS
+desktop.ini
+
+# Archivos de testing generados
+*.log

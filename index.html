@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#090d13"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <link rel="manifest" href="manifest.json"/>
+  <!-- FIX ISS-02: favicon assets -->
+  <link rel="icon" href="favicon.ico" sizes="any"/>
+  <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+  <!-- FIX ISS-06 -->
+  <title>CalcIng — Calculadora de Ingeniería Online</title>
+  <script src="libs/math.min.js"></script>
+  <link rel="stylesheet" href="styles/style.css"/>
+
+  <!-- ─── SEO básico ───────────────────────────────────────────────────────── -->
+  <meta name="description" content="CalcIng: calculadora científica web para ingeniería. Soporta trigonometría (RAD/DEG/GRAD), matrices, ecuaciones, estadística, números complejos, conversión de bases y unidades, y constantes físicas. Funciona offline como PWA."/>
+  <meta name="keywords"    content="calculadora ingeniería, calculadora científica, trigonometría, matrices, números complejos, estadística, conversión unidades, PWA, calculadora online, CalcIng"/>
+  <meta name="author"      content="CalcIng"/>
+  <meta name="robots"      content="index, follow"/>
+
+  <!-- ─── OpenGraph ────────────────────────────────────────────────────────── -->
+  <meta property="og:type"        content="website"/>
+  <meta property="og:title"       content="CalcIng — Calculadora Científica para Ingeniería"/>
+  <meta property="og:description" content="Calculadora científica web con trigonometría RAD/DEG/GRAD, matrices, ecuaciones, estadística, complejos, bases y unidades. Disponible offline como PWA."/>
+  <meta property="og:url"         content="https://calculadora-three-flame.vercel.app/"/>
+  <meta property="og:image"       content="https://calculadora-three-flame.vercel.app/icons/og-image.png"/>
+  <meta property="og:site_name"   content="CalcIng"/>
+  <meta property="og:locale"      content="es_CO"/>
+
+  <!-- ─── Twitter Cards ───────────────────────────────────────────────────── -->
+  <meta name="twitter:card"        content="summary_large_image"/>
+  <meta name="twitter:title"       content="CalcIng — Calculadora Científica para Ingeniería"/>
+  <meta name="twitter:description" content="Calculadora científica web con trigonometría RAD/DEG/GRAD, matrices, ecuaciones, estadística, complejos, bases y unidades. Disponible offline como PWA."/>
+  <meta name="twitter:image"       content="https://calculadora-three-flame.vercel.app/icons/og-image.png"/>
+  <meta name="twitter:site"        content="@CalcIng"/>
+
+  <!-- ─── Canonical ───────────────────────────────────────────────────────── -->
+  <link rel="canonical" href="https://calculadora-three-flame.vercel.app/"/>
+</head>
+<body>
+
+<!-- ─── Splash Screen ────────────────────────────────────────────────────── -->
+<div id="splash-screen" aria-hidden="true">
+  <div id="splash-content">
+    <div id="splash-logo">⚙</div>
+    <div id="splash-name">CalcIng</div>
+    <div id="splash-sub">Calculadora de Ingeniería</div>
+  </div>
+</div>
+
+<!-- Overlay para panel lateral en móvil/tablet -->
+<div id="panel-overlay"></div>
+
+<!-- ╔══════════════════════════════════════════════════════╗
+     ║              APLICACIÓN PRINCIPAL                    ║
+     ╚══════════════════════════════════════════════════════╝ -->
+<div id="app">
+
+  <!-- ── HEADER ───────────────────────────────────────────── -->
+  <header id="app-header">
+    <!-- Logo -->
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="20" height="20" rx="4" stroke="#F0A500" stroke-width="1.5"/>
+        <path d="M5 11h12M11 5v12" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="11" cy="11" r="2" fill="#F0A500" opacity="0.6"/>
+      </svg>
+      <span class="logo-texto">CALC<span>ING</span></span>
+    </div>
+
+    <!-- Separador visual -->
+    <div class="header-sep" aria-hidden="true"></div>
+
+    <!-- Nav de herramientas — única navegación -->
+    <nav id="header-nav" role="tablist" aria-label="Herramientas">
+      <button class="tab-btn" data-tab="historial"    role="tab">Historial</button>
+      <button class="tab-btn" data-tab="constantes"   role="tab">Constantes</button>
+      <button class="tab-btn" data-tab="unidades"     role="tab">Unidades</button>
+      <button class="tab-btn" data-tab="bases"        role="tab">Bases</button>
+      <button class="tab-btn" data-tab="estadistica"  role="tab">Estadística</button>
+      <button class="tab-btn" data-tab="complejos"    role="tab">Complejos</button>
+      <button class="tab-btn" data-tab="trigonometria" role="tab">Trig+</button>
+      <button class="tab-btn" data-tab="matriz"       role="tab">Matriz</button>
+      <button class="tab-btn" data-tab="ecuaciones"   role="tab">Ecuaciones</button>
+      <button class="tab-btn" data-tab="grafica"      role="tab">Gráfica</button>
+    </nav>
+
+    <!-- Controles derecha -->
+    <div class="header-controles">
+      <span id="mem-display" class="status-pill" style="color:#fbbf24;"></span>
+      <div class="mode-group" id="angle-mode-group">
+        <button class="mode-btn activo" data-mode="RAD" aria-pressed="true">RAD</button>
+        <button class="mode-btn" data-mode="DEG" aria-pressed="false">DEG</button>
+        <button class="mode-btn" data-mode="GRAD" aria-pressed="false">GRAD</button>
+      </div>
+      <!-- Botón abrir panel en móvil -->
+      <button id="btn-toggle-panel" title="Herramientas" aria-label="Abrir herramientas">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <rect y="2"  width="15" height="1.5" rx=".75" fill="currentColor"/>
+          <rect y="7"  width="15" height="1.5" rx=".75" fill="currentColor"/>
+          <rect y="12" width="15" height="1.5" rx=".75" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── CUERPO ────────────────────────────────────────────── -->
+  <div id="app-body">
+
+    <!-- ════════════════════════════════════════════════════
+         COLUMNA IZQUIERDA — CALCULADORA
+    ════════════════════════════════════════════════════ -->
+    <div id="col-calculadora">
+
+      <!-- Pantalla -->
+      <div id="display" role="region" aria-label="Pantalla de la calculadora">
+        <span class="dlabel">EXPRESIÓN</span>
+        <div id="display-expr" aria-live="polite"></div>
+        <div class="dsep"></div>
+        <span class="dlabel">RESULTADO</span>
+        <div id="display-result" aria-live="polite">0</div>
+        <div id="display-meta">
+          <span id="display-info">IEEE-754 · 15 dígitos</span>
+        </div>
+      </div>
+
+      <!-- Memoria -->
+      <div class="grid-mem">
+        <button class="calc-btn btn-mem" data-action="mem_store"  title="Guardar en memoria"   aria-label="Guardar en memoria">MS</button>
+        <button class="calc-btn btn-mem" data-action="mem_recall" title="Recuperar memoria"    aria-label="Recuperar memoria">MR</button>
+        <button class="calc-btn btn-mem" data-action="mem_add"    title="Sumar a memoria"      aria-label="Sumar a memoria">M+</button>
+        <button class="calc-btn btn-mem" data-action="mem_clear"  title="Borrar memoria"       aria-label="Borrar memoria">MC</button>
+      </div>
+
+      <!-- Funciones Científicas — fila 1 -->
+      <div class="grid-5col">
+        <button class="calc-btn btn-sci" data-action="sin"  aria-label="Seno">sen</button>
+        <button class="calc-btn btn-sci" data-action="cos"  aria-label="Coseno">cos</button>
+        <button class="calc-btn btn-sci" data-action="tan"  aria-label="Tangente">tan</button>
+        <button class="calc-btn btn-sci" data-action="log"  aria-label="Logaritmo base 10">log</button>
+        <button class="calc-btn btn-sci" data-action="ln"   aria-label="Logaritmo natural">ln</button>
+      </div>
+
+      <!-- Funciones Científicas — fila 2 -->
+      <div class="grid-5col">
+        <button class="calc-btn btn-sci" data-action="asin" aria-label="Arcoseno">sen⁻¹</button>
+        <button class="calc-btn btn-sci" data-action="acos" aria-label="Arcocoseno">cos⁻¹</button>
+        <button class="calc-btn btn-sci" data-action="atan" aria-label="Arcotangente">tan⁻¹</button>
+        <button class="calc-btn btn-sci" data-action="exp"  aria-label="Exponencial e elevado a x">eˣ</button>
+        <button class="calc-btn btn-sci" data-action="sqrt" aria-label="Raíz cuadrada">√</button>
+      </div>
+
+      <!-- Funciones Científicas — fila 3 -->
+      <div class="grid-5col">
+        <button class="calc-btn btn-sci" data-action="sinh" aria-label="Seno hiperbólico">senh</button>
+        <button class="calc-btn btn-sci" data-action="cosh" aria-label="Coseno hiperbólico">cosh</button>
+        <button class="calc-btn btn-sci" data-action="tanh" aria-label="Tangente hiperbólica">tanh</button>
+        <button class="calc-btn btn-sci" data-action="cbrt" aria-label="Raíz cúbica">∛</button>
+        <button class="calc-btn btn-sci" data-action="abs"  aria-label="Valor absoluto">|x|</button>
+      </div>
+
+      <!-- Funciones de Ingeniería — fila 1 -->
+      <div class="grid-5col">
+        <button class="calc-btn btn-fn" data-action="square"    aria-label="Elevar al cuadrado">x²</button>
+        <button class="calc-btn btn-fn" data-action="cube"      aria-label="Elevar al cubo">x³</button>
+        <button class="calc-btn btn-fn" data-action="power"     aria-label="Potencia x elevado a y">xʸ</button>
+        <button class="calc-btn btn-fn" data-action="inv"       aria-label="Inverso multiplicativo 1 sobre x">1/x</button>
+        <button class="calc-btn btn-fn" data-action="factorial" aria-label="Factorial">n!</button>
+      </div>
+
+      <!-- Funciones de Ingeniería — fila 2 -->
+      <div class="grid-5col">
+        <button class="calc-btn btn-fn" data-action="pi"           aria-label="Constante pi">π</button>
+        <button class="calc-btn btn-fn" data-action="e_const"      aria-label="Número de Euler e">e</button>
+        <button class="calc-btn btn-fn" data-action="eng_notation" aria-label="Notación de ingeniería">ING</button>
+        <button class="calc-btn btn-fn" data-action="ans"          aria-label="Último resultado">ANT</button>
+        <button class="calc-btn btn-fn" data-action="negate"       aria-label="Cambiar signo">±</button>
+      </div>
+
+      <!-- Teclado Numérico -->
+      <div class="grid-teclado">
+        <!-- Fila 1 -->
+        <button class="calc-btn btn-clear"    style="grid-column:span 2" data-action="clear"   aria-label="Borrar todo">AC</button>
+        <button class="calc-btn btn-operator" data-action="back"                                aria-label="Borrar último carácter">⌫</button>
+        <button class="calc-btn btn-operator" data-action="percent"                             aria-label="Porcentaje">%</button>
+        <button class="calc-btn btn-operator" data-input="/" data-display="÷"                  aria-label="Dividir">÷</button>
+        <!-- Fila 2 -->
+        <button class="calc-btn btn-number"   data-input="7"                                   aria-label="7">7</button>
+        <button class="calc-btn btn-number"   data-input="8"                                   aria-label="8">8</button>
+        <button class="calc-btn btn-number"   data-input="9"                                   aria-label="9">9</button>
+        <button class="calc-btn btn-operator" data-input="("                                   aria-label="Paréntesis de apertura">(</button>
+        <button class="calc-btn btn-operator" data-input="*" data-display="×"                  aria-label="Multiplicar">×</button>
+        <!-- Fila 3 -->
+        <button class="calc-btn btn-number"   data-input="4"                                   aria-label="4">4</button>
+        <button class="calc-btn btn-number"   data-input="5"                                   aria-label="5">5</button>
+        <button class="calc-btn btn-number"   data-input="6"                                   aria-label="6">6</button>
+        <button class="calc-btn btn-operator" data-input=")"                                   aria-label="Paréntesis de cierre">)</button>
+        <button class="calc-btn btn-operator" data-input="-"                                   aria-label="Restar">−</button>
+        <!-- Fila 4 -->
+        <button class="calc-btn btn-number"   data-input="1"                                   aria-label="1">1</button>
+        <button class="calc-btn btn-number"   data-input="2"                                   aria-label="2">2</button>
+        <button class="calc-btn btn-number"   data-input="3"                                   aria-label="3">3</button>
+        <button class="calc-btn btn-operator" data-input="^"                                   aria-label="Potencia">^</button>
+        <button class="calc-btn btn-operator" data-input="+"                                   aria-label="Sumar">+</button>
+        <!-- Fila 5 -->
+        <button class="calc-btn btn-number"   style="grid-column:span 2" data-input="0"        aria-label="0">0</button>
+        <button class="calc-btn btn-number"   data-input="."                                   aria-label="Punto decimal">.</button>
+        <button class="calc-btn btn-number"   data-input="e" data-display="E"                  aria-label="Notación científica E">E</button>
+        <button class="calc-btn btn-equals"   data-action="equals"                             aria-label="Igual, calcular resultado">=</button>
+      </div>
+
+    </div><!-- /col-calculadora -->
+
+    <!-- ════════════════════════════════════════════════════
+         COLUMNA DERECHA — PANEL LATERAL
+    ════════════════════════════════════════════════════ -->
+    <div id="col-panel">
+
+      <!-- Tabs dentro del drawer — solo visibles en móvil/tablet -->
+      <div id="panel-tabs" role="tablist" aria-label="Herramientas" aria-hidden="true">
+        <button class="tab-btn" data-tab="historial"    role="tab">Historial</button>
+        <button class="tab-btn" data-tab="constantes"   role="tab">Constantes</button>
+        <button class="tab-btn" data-tab="unidades"     role="tab">Unidades</button>
+        <button class="tab-btn" data-tab="bases"        role="tab">Bases</button>
+        <button class="tab-btn" data-tab="estadistica"  role="tab">Estadística</button>
+        <button class="tab-btn" data-tab="complejos"    role="tab">Complejos</button>
+        <button class="tab-btn" data-tab="trigonometria" role="tab">Trig+</button>
+        <button class="tab-btn" data-tab="matriz"       role="tab">Matriz</button>
+        <button class="tab-btn" data-tab="ecuaciones"   role="tab">Ecuaciones</button>
+        <button class="tab-btn" data-tab="grafica"      role="tab">Gráfica</button>
+      </div>
+
+      <!-- Paneles de contenido — sin barra de tabs propia -->
+      <div id="panel-contenido">
+
+        <!-- ── Historial ── -->
+        <div data-panel="historial" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">
+            Historial de Cálculos
+            <button data-action="clear_history" class="btn-limpiar-hist" aria-label="Limpiar historial">
+              ✕ Limpiar
+            </button>
+          </div>
+          <div id="history-list" style="display:flex;flex-direction:column;gap:4px;">
+            <div style="color:#374151;font-size:0.72rem;text-align:center;padding:2rem 1rem;">
+              Sin historial aún.<br>Realiza un cálculo para verlo aquí.
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Constantes ── -->
+        <div data-panel="constantes" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Constantes Físicas y Matemáticas</div>
+          <div id="constants-panel" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+
+        <!-- ── Conversor de Unidades ── -->
+        <div data-panel="unidades" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Conversor de Unidades</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label class="campo-label">Categoría</label>
+              <select id="unit-category" class="eng-select"></select>
+            </div>
+            <div>
+              <label class="campo-label">Valor</label>
+              <input id="unit-value" type="number" class="eng-input" placeholder="Ingresa un valor..." value="1"/>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div>
+                <label class="campo-label">Desde</label>
+                <select id="unit-from" class="eng-select"></select>
+              </div>
+              <div>
+                <label class="campo-label">Hacia</label>
+                <select id="unit-to" class="eng-select"></select>
+              </div>
+            </div>
+            <button id="btn-convert" class="btn-panel">Convertir →</button>
+            <div id="unit-result" class="panel-resultado" style="min-height:36px;"></div>
+          </div>
+        </div>
+
+        <!-- ── Estadística ── -->
+        <div data-panel="estadistica" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Estadística Descriptiva</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+
+            <div>
+              <label class="campo-label">Dataset (números separados por coma)</label>
+              <textarea id="stat-input" class="eng-input"
+                placeholder="Ej: 2, 4, 4, 4, 5, 5, 7, 9"
+                rows="3"></textarea>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <button class="btn-panel btn-stat" data-fn="mean">Media</button>
+              <button class="btn-panel btn-stat" data-fn="median">Mediana</button>
+              <button class="btn-panel btn-stat" data-fn="mode">Moda</button>
+              <button class="btn-panel btn-stat" data-fn="variance">Varianza</button>
+              <button class="btn-panel btn-stat" data-fn="stdDev">Desv. Estándar</button>
+              <button class="btn-panel btn-stat" data-fn="range">Rango</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;">
+              <div>
+                <label class="campo-label">Percentil (0 - 100)</label>
+                <input id="stat-percentile-p" type="number" min="0" max="100"
+                       class="eng-input" placeholder="Ej: 25, 50, 75"/>
+              </div>
+              <button class="btn-panel btn-stat" data-fn="percentile"
+                      style="white-space:nowrap;">Calcular</button>
+            </div>
+
+            <div id="stat-result" style="min-height:36px;"></div>
+
+          </div>
+        </div>
+
+        <!-- ── Bases Numéricas ── -->
+        <!-- ── Números Complejos ── -->
+        <div data-panel="complejos" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Números Complejos</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+
+            <!-- Sección 1: Propiedades de un solo z -->
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="campo-label" style="margin:0;">Propiedades de z = a + bi</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div>
+                  <label class="campo-label">Parte real (a)</label>
+                  <input id="cpx-re" type="number" class="eng-input" placeholder="Ej: 3"/>
+                </div>
+                <div>
+                  <label class="campo-label">Parte imaginaria (b)</label>
+                  <input id="cpx-im" type="number" class="eng-input" placeholder="Ej: 4"/>
+                </div>
+              </div>
+              <div id="cpx-preview" style="font-family:var(--mono);font-size:0.75rem;
+                   color:var(--acento);text-align:center;min-height:1.2em;"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <button class="btn-panel btn-cpx" data-op="modulus">|z| Módulo</button>
+                <button class="btn-panel btn-cpx" data-op="argument">arg(z)</button>
+                <button class="btn-panel btn-cpx" data-op="conjugate">z̄ Conjugado</button>
+                <button class="btn-panel btn-cpx" data-op="polar">Forma Polar</button>
+                <button class="btn-panel btn-cpx" data-op="sqrt" style="grid-column:span 2;">√z Raíz cuadrada</button>
+              </div>
+            </div>
+
+            <!-- Divisor -->
+            <div style="border-top:1px solid var(--borde);"></div>
+
+            <!-- Sección 2: Aritmética z1 OP z2 -->
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="campo-label" style="margin:0;">Aritmética: z1 OP z2</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div>
+                  <label class="campo-label">Re(z1)</label>
+                  <input id="cpx-re1" type="number" class="eng-input" placeholder="0"/>
+                </div>
+                <div>
+                  <label class="campo-label">Im(z1)</label>
+                  <input id="cpx-im1" type="number" class="eng-input" placeholder="0"/>
+                </div>
+                <div>
+                  <label class="campo-label">Re(z2)</label>
+                  <input id="cpx-re2" type="number" class="eng-input" placeholder="0"/>
+                </div>
+                <div>
+                  <label class="campo-label">Im(z2)</label>
+                  <input id="cpx-im2" type="number" class="eng-input" placeholder="0"/>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <button class="btn-panel btn-cpx2" data-op="add">z1 + z2</button>
+                <button class="btn-panel btn-cpx2" data-op="subtract">z1 − z2</button>
+                <button class="btn-panel btn-cpx2" data-op="multiply">z1 × z2</button>
+                <button class="btn-panel btn-cpx2" data-op="divide">z1 ÷ z2</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;">
+                <div>
+                  <label class="campo-label">Exponente entero n</label>
+                  <input id="cpx-exp" type="number" class="eng-input" placeholder="Ej: 2, 3"/>
+                </div>
+                <button class="btn-panel btn-cpx2" data-op="power"
+                        style="white-space:nowrap;">z1 ^ n</button>
+              </div>
+            </div>
+
+            <div id="cpx-result" style="min-height:36px;"></div>
+
+          </div>
+        </div>
+
+        <div data-panel="bases" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Conversor de Bases Numéricas</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+
+            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;">
+              <div>
+                <label class="campo-label">Valor</label>
+                <input id="bases-input" class="eng-input" placeholder="Ej: 255, FF, 1010…"/>
+              </div>
+              <div>
+                <label class="campo-label">Base origen</label>
+                <select id="bases-from" class="eng-select" style="width:auto;">
+                  <option value="DEC">DEC</option>
+                  <option value="BIN">BIN</option>
+                  <option value="OCT">OCT</option>
+                  <option value="HEX">HEX</option>
+                </select>
+              </div>
+            </div>
+
+            <button id="btn-bases-convert" class="btn-panel">Convertir →</button>
+
+            <div id="bases-result" style="display:flex;flex-direction:column;gap:6px;"></div>
+
+          </div>
+        </div>
+
+        <!-- ── Trigonometría Avanzada ── -->
+        <div data-panel="trigonometria" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Trigonometría Avanzada</div>
+
+          <!-- SUB-1: Calculadora de triángulos -->
+          <details class="trig-seccion" open>
+            <summary>Calculadora de Triángulo</summary>
+            <div>
+              <p style="font-size:0.65rem;color:var(--apagado);margin:0 0 8px;">
+                Ingresa al menos 3 valores (lados en cualquier unidad, ángulos en grados).
+              </p>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;">
+                <div>
+                  <label class="campo-label">lado a</label>
+                  <input id="ta" type="number" class="eng-input" placeholder="–" min="0" step="any"/>
+                </div>
+                <div>
+                  <label class="campo-label">lado b</label>
+                  <input id="tb" type="number" class="eng-input" placeholder="–" min="0" step="any"/>
+                </div>
+                <div>
+                  <label class="campo-label">lado c</label>
+                  <input id="tc" type="number" class="eng-input" placeholder="–" min="0" step="any"/>
+                </div>
+                <div>
+                  <label class="campo-label">ángulo A°</label>
+                  <input id="tA" type="number" class="eng-input" placeholder="–" min="0" max="180" step="any"/>
+                </div>
+                <div>
+                  <label class="campo-label">ángulo B°</label>
+                  <input id="tB" type="number" class="eng-input" placeholder="–" min="0" max="180" step="any"/>
+                </div>
+                <div>
+                  <label class="campo-label">ángulo C°</label>
+                  <input id="tC" type="number" class="eng-input" placeholder="–" min="0" max="180" step="any"/>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-bottom:8px;">
+                <button id="btn-trig-calcular" class="btn-panel" style="flex:1;">Calcular triángulo →</button>
+                <button id="btn-trig-limpiar" class="btn-panel" style="flex:0 0 auto;background:var(--superficie2);color:var(--apagado);">✕ Limpiar</button>
+              </div>
+              <div id="trig-result"></div>
+            </div>
+          </details>
+
+          <!-- SUB-2: Tabla de ángulos notables -->
+          <details class="trig-seccion">
+            <summary>Ángulos Notables</summary>
+            <div>
+              <table class="trig-table">
+                <thead>
+                  <tr>
+                    <th>Grados</th>
+                    <th>Radianes</th>
+                    <th>sin</th>
+                    <th>cos</th>
+                    <th>tan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>0°</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                  </tr>
+                  <tr>
+                    <td>30°</td>
+                    <td>π/6</td>
+                    <td>1/2</td>
+                    <td>√3/2</td>
+                    <td>√3/3</td>
+                  </tr>
+                  <tr>
+                    <td>45°</td>
+                    <td>π/4</td>
+                    <td>√2/2</td>
+                    <td>√2/2</td>
+                    <td>1</td>
+                  </tr>
+                  <tr>
+                    <td>60°</td>
+                    <td>π/3</td>
+                    <td>√3/2</td>
+                    <td>1/2</td>
+                    <td>√3</td>
+                  </tr>
+                  <tr>
+                    <td>90°</td>
+                    <td>π/2</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>∞</td>
+                  </tr>
+                  <tr>
+                    <td>120°</td>
+                    <td>2π/3</td>
+                    <td>√3/2</td>
+                    <td>−1/2</td>
+                    <td>−√3</td>
+                  </tr>
+                  <tr>
+                    <td>135°</td>
+                    <td>3π/4</td>
+                    <td>√2/2</td>
+                    <td>−√2/2</td>
+                    <td>−1</td>
+                  </tr>
+                  <tr>
+                    <td>150°</td>
+                    <td>5π/6</td>
+                    <td>1/2</td>
+                    <td>−√3/2</td>
+                    <td>−√3/3</td>
+                  </tr>
+                  <tr>
+                    <td>180°</td>
+                    <td>π</td>
+                    <td>0</td>
+                    <td>−1</td>
+                    <td>0</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <!-- SUB-3: Identidades trigonométricas -->
+          <details class="trig-seccion">
+            <summary>Identidades Trigonométricas</summary>
+            <div>
+
+              <div class="trig-grupo-label">Pitagóricas</div>
+              <div class="trig-identidad"><code>sin²(x) + cos²(x) = 1</code></div>
+              <div class="trig-identidad"><code>1 + tan²(x) = sec²(x)</code></div>
+              <div class="trig-identidad"><code>1 + cot²(x) = csc²(x)</code></div>
+
+              <div class="trig-grupo-label">Suma y diferencia de ángulos</div>
+              <div class="trig-identidad"><code>sin(a ± b) = sin(a)cos(b) ± cos(a)sin(b)</code></div>
+              <div class="trig-identidad"><code>cos(a ± b) = cos(a)cos(b) ∓ sin(a)sin(b)</code></div>
+              <div class="trig-identidad"><code>tan(a ± b) = (tan(a) ± tan(b)) / (1 ∓ tan(a)tan(b))</code></div>
+
+              <div class="trig-grupo-label">Ángulo doble</div>
+              <div class="trig-identidad"><code>sin(2a) = 2·sin(a)·cos(a)</code></div>
+              <div class="trig-identidad"><code>cos(2a) = cos²(a) − sin²(a) = 1 − 2sin²(a)</code></div>
+              <div class="trig-identidad"><code>tan(2a) = 2·tan(a) / (1 − tan²(a))</code></div>
+
+              <div class="trig-grupo-label">Ángulo mitad</div>
+              <div class="trig-identidad"><code>sin(a/2) = ±√((1 − cos(a)) / 2)</code></div>
+              <div class="trig-identidad"><code>cos(a/2) = ±√((1 + cos(a)) / 2)</code></div>
+
+              <div class="trig-grupo-label">Producto a suma</div>
+              <div class="trig-identidad"><code>sin(a)·cos(b) = ½[sin(a+b) + sin(a−b)]</code></div>
+              <div class="trig-identidad"><code>cos(a)·cos(b) = ½[cos(a−b) + cos(a+b)]</code></div>
+              <div class="trig-identidad"><code>sin(a)·sin(b) = ½[cos(a−b) − cos(a+b)]</code></div>
+
+            </div>
+          </details>
+
+        </div>
+
+        <!-- ── Matrices ── -->
+        <div data-panel="matriz" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Operaciones con Matrices</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div class="matriz-grid">
+              <div>
+                <label class="campo-label">Matriz A <span class="campo-hint">(filas: ; · cols: ,)</span></label>
+                <textarea id="mat-a" class="eng-input" rows="3" placeholder="1,2;3,4">1,2;3,4</textarea>
+              </div>
+              <div>
+                <label class="campo-label">Matriz B <span class="campo-hint">(operaciones binarias)</span></label>
+                <textarea id="mat-b" class="eng-input" rows="3" placeholder="5,6;7,8">5,6;7,8</textarea>
+              </div>
+            </div>
+            <div>
+              <label class="campo-label">Operación</label>
+              <select id="mat-op" class="eng-select">
+                <option value="add">A + B  — Suma</option>
+                <option value="sub">A − B  — Resta</option>
+                <option value="mul">A × B  — Multiplicación</option>
+                <option value="det">det(A) — Determinante</option>
+                <option value="inv">A⁻¹   — Inversa</option>
+                <option value="transpose">Aᵀ — Transpuesta</option>
+              </select>
+            </div>
+            <button id="btn-mat-op" class="btn-panel">Calcular</button>
+            <pre id="mat-result" class="panel-resultado" style="min-height:36px;overflow-x:auto;"></pre>
+          </div>
+        </div>
+
+        <!-- ── Solucionador de Ecuaciones ── -->
+        <div data-panel="ecuaciones" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Solucionador de Ecuaciones</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label class="campo-label">Tipo de Ecuación</label>
+              <select id="solver-type" class="eng-select">
+                <option value="linear">Lineal: ax + b = 0</option>
+                <option value="quadratic">Cuadrática: ax² + bx + c = 0</option>
+              </select>
+            </div>
+            <div class="coeficientes-box">
+              <div style="font-size:0.65rem;color:var(--apagado);margin-bottom:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Coeficientes</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div class="coef-fila">
+                  <label class="coef-label">a</label>
+                  <input id="solver-a" type="number" class="eng-input" value="1"/>
+                </div>
+                <div class="coef-fila">
+                  <label class="coef-label">b</label>
+                  <input id="solver-b" type="number" class="eng-input" value="-5"/>
+                </div>
+                <div id="solver-c-row" class="coef-fila" style="display:none;">
+                  <label class="coef-label">c</label>
+                  <input id="solver-c" type="number" class="eng-input" value="6"/>
+                </div>
+              </div>
+            </div>
+            <button id="btn-solve" class="btn-panel">Resolver →</button>
+            <pre id="solver-result" class="panel-resultado" style="min-height:36px;"></pre>
+          </div>
+        </div>
+
+        <!-- ── Graficadora ── -->
+        <div data-panel="grafica" class="panel-seccion hidden" role="tabpanel">
+          <div class="panel-titulo">Graficadora de Funciones</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <label class="campo-label">f(x) <span class="campo-hint">— separa varias funciones con comas</span></label>
+              <input id="graph-input" class="eng-input" placeholder="sin(x), x^2/10" value="sin(x)"/>
+            </div>
+            <button id="btn-plot" class="btn-panel" style="font-size:0.78rem;">Graficar</button>
+            <div>
+              <div style="font-size:0.62rem;color:#374151;margin-bottom:5px;">Inserción rápida</div>
+              <div id="quick-fns" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+            </div>
+
+            <!-- Canvas con controles flotantes -->
+            <div class="grafica-wrapper">
+              <canvas id="graph-canvas" aria-label="Gráfica de funciones"></canvas>
+              <div class="grafica-controles-float">
+                <div class="grafica-zoom-group">
+                  <button id="btn-zoom-in"    class="btn-zoom" title="Acercar"      aria-label="Acercar zoom">+</button>
+                  <button id="btn-zoom-out"   class="btn-zoom" title="Alejar"       aria-label="Alejar zoom">−</button>
+                  <div class="zoom-separator" aria-hidden="true"></div>
+                  <button id="btn-zoom-reset" class="btn-zoom btn-zoom-reset" title="Restablecer zoom" aria-label="Restablecer zoom">↺</button>
+                  <button id="btn-clear-graph" class="btn-zoom btn-zoom-clear" title="Limpiar gráfica" aria-label="Limpiar gráfica">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-size:0.62rem;color:#374151;">
+              Variable: <code style="color:#6b7280;font-family:var(--mono);">x</code>
+              &nbsp;·&nbsp; Funciones: sin, cos, tan, sqrt, log10, exp, abs...
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-contenido -->
+    </div><!-- /col-panel -->
+
+  </div><!-- /app-body -->
+
+
+</div><!-- /app -->
+
+<!-- ── Scripts ────────────────────────────────────────────── -->
+<script type="module" src="main.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  /* ══════════════════════════════════════════════════════
+     SISTEMA DE PESTAÑAS — autónomo, no depende de main.js
+     Escucha en #header-nav (desktop) y #panel-tabs (móvil)
+  ══════════════════════════════════════════════════════ */
+  function activarPestana(tabId) {
+    // Desactivar todas las tab-btn en ambas navs
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
+      b.classList.remove('activa');
+      b.setAttribute('aria-selected', 'false');
+    });
+    document.querySelectorAll('[data-panel]').forEach(function(p) {
+      p.classList.add('hidden');
+    });
+    // Activar todas las que apuntan al mismo tab (header + drawer)
+    document.querySelectorAll('.tab-btn[data-tab="' + tabId + '"]').forEach(function(b) {
+      b.classList.add('activa');
+      b.setAttribute('aria-selected', 'true');
+    });
+    var target = document.querySelector('[data-panel="' + tabId + '"]');
+    if (target) target.classList.remove('hidden');
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      activarPestana(btn.getAttribute('data-tab'));
+    });
+  });
+
+  // Activar primera pestaña al inicio
+  var primera = document.querySelector('.tab-btn');
+  if (primera) activarPestana(primera.getAttribute('data-tab'));
+
+  /* ══════════════════════════════════════════════════════
+     PANEL LATERAL RESPONSIVO
+  ══════════════════════════════════════════════════════ */
+  var panel     = document.getElementById('col-panel');
+  var overlay   = document.getElementById('panel-overlay');
+  var btnToggle = document.getElementById('btn-toggle-panel');
+  var abierto   = false;
+
+  function esDesktop() { return window.innerWidth >= 1024; }
+
+  function abrirPanel() {
+    if (esDesktop()) return;
+    panel.classList.add('abierto');
+    overlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+    abierto = true;
+  }
+
+  function cerrarPanel() {
+    panel.classList.remove('abierto');
+    overlay.classList.remove('visible');
+    document.body.style.overflow = '';
+    abierto = false;
+  }
+
+  if (btnToggle) btnToggle.addEventListener('click', function() {
+    abierto ? cerrarPanel() : abrirPanel();
+  });
+
+  if (overlay) overlay.addEventListener('click', cerrarPanel);
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && abierto && !esDesktop()) cerrarPanel();
+  });
+
+  window.addEventListener('resize', function() {
+    if (esDesktop()) cerrarPanel();
+  });
+
+  /* ══════════════════════════════════════════════════════
+     BOTONES DE INSERCIÓN RÁPIDA — GRAFICADORA
+  ══════════════════════════════════════════════════════ */
+  var fns = ['sin(x)','cos(x)','tan(x)','x^2','sqrt(x)','log10(x)','exp(x)','1/x','abs(x)','x^3'];
+  var container = document.getElementById('quick-fns');
+  if (container) {
+    fns.forEach(function(fn) {
+      var btn = document.createElement('button');
+      btn.textContent = fn;
+      btn.className = 'quick-fn-btn';
+      btn.type = 'button';
+      btn.addEventListener('click', function() {
+        var input = document.getElementById('graph-input');
+        if (input) {
+          input.value = input.value ? input.value + ', ' + fn : fn;
+          input.focus();
+        }
+      });
+      container.appendChild(btn);
+    });
+  }
+
+});
+</script>
+
+<!-- ── Registro del Service Worker ─────────────────────── -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      console.log('Service Worker registrado:', reg.scope);
+    }).catch(function(err) {
+      console.warn('Error al registrar Service Worker:', err);
+    });
+  });
+}
+</script>
+
+</body>
+</html>
